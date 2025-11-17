@@ -10,6 +10,7 @@ import LoginScreen from "./LoginScreen";
 import UserListScreen from "./UserListScreen";
 import MessengerScreen from "./MessengerScreen";
 import CommentScreen from "./CommentScreen";
+import AboutScreen from "./screens/AboutScreen";
 
 const Stack = createStackNavigator();
 
@@ -31,7 +32,7 @@ export default function App() {
     <SQLiteProvider
       databaseName="authDatabase.db"
       onInit={async (db) => {
-        // Tables
+        // Users, Messages, Comments tables
         await db.execAsync(`
           CREATE TABLE IF NOT EXISTS auth_users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,16 +55,16 @@ export default function App() {
             comment TEXT NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
           );
-        `);
 
-        // Profile Image Column
-        try {
-          await db.runAsync("ALTER TABLE auth_users ADD COLUMN profileUri TEXT;");
-        } catch (error) {
-          if (!error.message.includes("duplicate column")) {
-            console.error("Error adding profileUri column:", error);
-          }
-        }
+          -- ✅ New table for bio & address
+          CREATE TABLE IF NOT EXISTS user_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            bio TEXT,
+            address TEXT,
+            FOREIGN KEY(user_id) REFERENCES auth_users(id)
+          );
+        `);
       }}
     >
       <NavigationContainer theme={NeonDarkTheme}>
@@ -88,29 +89,30 @@ export default function App() {
             component={RegisterScreen}
             options={{ title: "REGISTER" }}
           />
-
           <Stack.Screen
             name="Login"
             component={LoginScreen}
             options={{ title: "LOGIN" }}
           />
-
           <Stack.Screen
             name="Users"
             component={UserListScreen}
             options={{ title: "USERS" }}
           />
-
           <Stack.Screen
             name="Messenger"
             component={MessengerScreen}
             options={{ headerShown: false }}
           />
-
           <Stack.Screen
             name="Comments"
             component={CommentScreen}
             options={{ title: "COMMENTS" }}
+          />
+          <Stack.Screen
+            name="About"
+            component={AboutScreen}
+            options={{ title: "ABOUT" }}
           />
         </Stack.Navigator>
       </NavigationContainer>

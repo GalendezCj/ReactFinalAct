@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "FinalActivity",
-    "slug": "FinalActivity",
+    "name": "Palatan_T.",
+    "slug": "Palatan_T.",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   KeyboardAvoidingView,
@@ -24,6 +24,23 @@ const LoginScreen = ({ navigation }) => {
   const [otherUsers, setOtherUsers] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
 
+  // Ensure profileUri column exists
+  useEffect(() => {
+    const createProfileUriColumn = async () => {
+      try {
+        await db.runAsync(
+          "ALTER TABLE auth_users ADD COLUMN profileUri TEXT;"
+        );
+      } catch (err) {
+        // Ignore "duplicate column" errors
+        if (!err.message.includes("duplicate column")) {
+          console.error("Error adding profileUri column:", err);
+        }
+      }
+    };
+    createProfileUriColumn();
+  }, []);
+
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -44,10 +61,10 @@ const LoginScreen = ({ navigation }) => {
 
       if (loggedInUser) {
         try {
-          await db.runAsync("UPDATE auth_users SET profileUri = ? WHERE id = ?", [
-            uri,
-            loggedInUser.id,
-          ]);
+          await db.runAsync(
+            "UPDATE auth_users SET profileUri = ? WHERE id = ?",
+            [uri, loggedInUser.id]
+          );
           Alert.alert("Updated", "Profile picture updated successfully!");
         } catch (err) {
           console.error("Error saving profile:", err);
@@ -110,22 +127,21 @@ const LoginScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#121212" }}>
       <KeyboardAvoidingView
         style={{ flex: 1, padding: 20 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {!loggedInUser ? (
           <View style={styles.loginContainer}>
-
-            {/* ⭐ ADDED LOGO HERE – ONLY CHANGE */}
             <Image
-              source={require("./assets/logo.jpg")}  // <-- change path if needed
+              source={require("./assets/logo.jpg")}
               style={{
                 width: 120,
                 height: 120,
                 alignSelf: "center",
                 marginBottom: 15,
+                borderRadius: 60,
               }}
             />
 
@@ -179,6 +195,21 @@ const LoginScreen = ({ navigation }) => {
               style={{ flex: 1, marginTop: 10 }}
             />
 
+            {/* ABOUT BUTTON */}
+            <View style={{ marginVertical: 10 }}>
+              <Button
+                title="About"
+                onPress={() =>
+                  navigation.navigate("About", {
+                    userId: loggedInUser.id,
+                    image: profileImage,
+                  })
+                }
+                color="#6f42c1"
+              />
+            </View>
+
+            {/* LOGOUT BUTTON */}
             <View style={{ marginVertical: 10 }}>
               <Button
                 title="Logout"
@@ -202,7 +233,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-
   title: {
     fontSize: 32,
     fontWeight: "800",
@@ -213,7 +243,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
-
   input: {
     backgroundColor: "#f9f9f9",
     padding: 14,
@@ -223,12 +252,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#d6b3ff",
     color: "#000",
-    shadowColor: "rgba(187, 0, 255, 0.7)",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
   },
-
   link: {
     color: "#d180ff",
     textAlign: "center",
@@ -238,38 +262,30 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(209, 128, 255, 0.5)",
     textShadowRadius: 8,
   },
-
   profileSection: {
     alignItems: "center",
     marginBottom: 25,
     marginTop: 20,
     paddingVertical: 10,
   },
-
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
     borderColor: "#bb00ff",
-    shadowColor: "rgba(187, 0, 255, 0.9)",
-    shadowOpacity: 1,
-    shadowRadius: 20,
   },
-
   userNameBig: {
     fontSize: 22,
     fontWeight: "800",
     marginTop: 10,
     color: "#fff",
   },
-
   changePhotoText: {
     fontSize: 13,
     marginTop: 5,
     color: "#aaa",
   },
-
   subtitle: {
     fontSize: 20,
     fontWeight: "700",
@@ -279,7 +295,6 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(187, 0, 255, 0.5)",
     textShadowRadius: 10,
   },
-
   userRow: {
     padding: 15,
     backgroundColor: "#121212",
@@ -287,18 +302,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderLeftWidth: 5,
     borderLeftColor: "#bb00ff",
-    shadowColor: "rgba(187, 0, 255, 0.4)",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 12,
   },
-
   userName: {
     fontSize: 17,
     fontWeight: "700",
     color: "#fff",
   },
-
   userEmail: {
     fontSize: 14,
     color: "#ccc",
