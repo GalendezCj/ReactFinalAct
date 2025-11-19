@@ -22,7 +22,6 @@ const MessengerScreen = ({ route, navigation }) => {
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [currentUserPic, setCurrentUserPic] = useState(null);
   const [chatWithUserPic, setChatWithUserPic] = useState(null);
 
@@ -72,9 +71,6 @@ const MessengerScreen = ({ route, navigation }) => {
         [currentUser.name, chatWithUser.name, chatWithUser.name, currentUser.name]
       );
       setMessages(results);
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       console.error("Load Messages Error:", error);
     }
@@ -100,16 +96,6 @@ const MessengerScreen = ({ route, navigation }) => {
       loadMessages();
       loadUserPics();
     });
-
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) =>
-      setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
   }, []);
 
   const renderItem = ({ item }) => {
@@ -125,7 +111,9 @@ const MessengerScreen = ({ route, navigation }) => {
           />
         )}
         <View style={[styles.messageBubble, isMe ? styles.myMessage : styles.otherMessage]}>
-          <Text style={isMe ? styles.myMessageText : styles.otherMessageText}>{item.message}</Text>
+          <Text style={isMe ? styles.myMessageText : styles.otherMessageText}>
+            {item.message}
+          </Text>
         </View>
         {isMe && (
           <Image
@@ -139,12 +127,12 @@ const MessengerScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0084ff" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a001f" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -164,19 +152,21 @@ const MessengerScreen = ({ route, navigation }) => {
           contentContainerStyle={{ paddingVertical: 10 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
         {/* Input */}
-        <View style={[styles.inputRow, { marginBottom: keyboardHeight }]}>
+        <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
+            placeholderTextColor="#ccc"
             value={newMessage}
             onChangeText={setNewMessage}
             multiline
           />
           <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-            <Text style={{ color: "#fff", fontWeight: "bold" }}>Send</Text>
+            <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -185,13 +175,10 @@ const MessengerScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // 🖤 Entire messenger dark mode
-  safeArea: { 
-    flex: 1, 
+  safeArea: {
+    flex: 1,
     backgroundColor: "#000",
   },
-
-  // 🟣 Glowing Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -205,88 +192,65 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     borderBottomWidth: 1,
     borderBottomColor: "#4d0066",
+    elevation: 6,
   },
-
   backButton: { padding: 4 },
-
-  backText: { 
-    color: "#d180ff", 
-    fontSize: 16, 
+  backText: {
+    color: "#d180ff",
+    fontSize: 16,
     fontWeight: "bold",
     textShadowColor: "rgba(209, 128, 255, 0.6)",
     textShadowRadius: 12,
   },
-
-  headerName: { 
-    color: "#fff", 
-    fontSize: 20, 
+  headerName: {
+    color: "#fff",
+    fontSize: 20,
     fontWeight: "800",
     textShadowColor: "rgba(187, 0, 255, 0.6)",
     textShadowRadius: 12,
     flex: 1,
     textAlign: "center",
   },
-
-  container: { flex: 1 },
-
-  // 🔮 Chat rows
-  messageRow: { 
+  messageRow: {
     flexDirection: "row",
     alignItems: "flex-end",
     marginVertical: 6,
     paddingHorizontal: 10,
   },
-
   rowLeft: { justifyContent: "flex-start" },
   rowRight: { justifyContent: "flex-end" },
-
-  chatHeadImage: { 
-    width: 38, 
-    height: 38, 
-    borderRadius: 20, 
+  chatHeadImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 20,
     marginHorizontal: 4,
     borderWidth: 2,
     borderColor: "#d180ff",
   },
-
-  // ☄️ Message bubbles
-  messageBubble: { 
-    padding: 12, 
-    borderRadius: 18, 
+  messageBubble: {
+    padding: 12,
+    borderRadius: 18,
     maxWidth: "70%",
   },
-
-  // ✨ Your message (neon purple)
-  myMessage: { 
+  myMessage: {
     backgroundColor: "#5d0099",
     shadowColor: "rgba(187, 0, 255, 0.8)",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 14,
+    elevation: 6,
     marginLeft: 6,
     borderWidth: 1,
     borderColor: "#bb00ff",
   },
-
-  myMessageText: { 
-    color: "#fff", 
-    fontSize: 16,
-  },
-
-  // 💬 Their message (gray bubble)
-  otherMessage: { 
+  myMessageText: { color: "#fff", fontSize: 16 },
+  otherMessage: {
     backgroundColor: "#1a1a1a",
     borderWidth: 1,
     borderColor: "#4d4d4d",
     marginRight: 6,
   },
-
-  otherMessageText: { 
-    color: "#fff", 
-    fontSize: 16 
-  },
-
-  // 🔲 Input bar (light input, not black)
+  otherMessageText: { color: "#fff", fontSize: 16 },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -295,26 +259,19 @@ const styles = StyleSheet.create({
     borderTopColor: "#4d0066",
     backgroundColor: "#0d0d0d",
   },
-
   input: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-    color: "#000",
+    backgroundColor: "#1e1e1e",
+    color: "#fff",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginRight: 8,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#d6b3ff",
-    shadowColor: "rgba(187, 0, 255, 0.7)",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    borderColor: "#8a2be2",
     maxHeight: 100,
   },
-
-  // 🚀 Neon Send button
   sendButton: {
     backgroundColor: "#bb00ff",
     paddingVertical: 10,
@@ -324,8 +281,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 14,
     shadowOpacity: 1,
+    elevation: 6,
   },
+  sendText: { color: "#fff", fontWeight: "bold" },
 });
-
 
 export default MessengerScreen;
