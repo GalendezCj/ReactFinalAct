@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -12,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const RegisterScreen = ({ navigation }) => {
   const db = useSQLiteContext();

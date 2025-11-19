@@ -5,15 +5,14 @@ import {
   TextInput,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
-  Platform,
   TouchableOpacity,
   StatusBar,
-  Keyboard,
   Image,
+  Platform,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MessengerScreen = ({ route, navigation }) => {
   const { currentUser, chatWithUser } = route.params;
@@ -25,7 +24,7 @@ const MessengerScreen = ({ route, navigation }) => {
   const [currentUserPic, setCurrentUserPic] = useState(null);
   const [chatWithUserPic, setChatWithUserPic] = useState(null);
 
-  // Fetch user profile pictures
+  // Load user profile pictures
   const loadUserPics = async () => {
     try {
       const current = await db.getFirstAsync(
@@ -71,6 +70,11 @@ const MessengerScreen = ({ route, navigation }) => {
         [currentUser.name, chatWithUser.name, chatWithUser.name, currentUser.name]
       );
       setMessages(results);
+
+      // Scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (error) {
       console.error("Load Messages Error:", error);
     }
@@ -129,21 +133,20 @@ const MessengerScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#1a001f" />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backText}>◀ Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerName}>{chatWithUser.name}</Text>
+        <View style={{ width: 60 }} />
+      </View>
+
+      {/* Messages + Input */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        behavior="height" // important for Android
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backText}>◀ Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerName}>{chatWithUser.name}</Text>
-          <View style={{ width: 60 }} />
-        </View>
-
-        {/* Messages */}
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -152,10 +155,8 @@ const MessengerScreen = ({ route, navigation }) => {
           contentContainerStyle={{ paddingVertical: 10 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
-        {/* Input */}
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}

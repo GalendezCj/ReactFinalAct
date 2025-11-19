@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  SafeAreaView,
   KeyboardAvoidingView,
   View,
   Text,
@@ -16,6 +15,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useSQLiteContext } from "expo-sqlite";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoginScreen = ({ navigation }) => {
   const db = useSQLiteContext();
@@ -28,9 +28,7 @@ const LoginScreen = ({ navigation }) => {
   useEffect(() => {
     const createProfileUriColumn = async () => {
       try {
-        await db.runAsync(
-          "ALTER TABLE auth_users ADD COLUMN profileUri TEXT;"
-        );
+        await db.runAsync("ALTER TABLE auth_users ADD COLUMN profileUri TEXT;");
       } catch (err) {
         if (!err.message.includes("duplicate column")) {
           console.error("Error adding profileUri column:", err);
@@ -132,16 +130,13 @@ const LoginScreen = ({ navigation }) => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, padding: 20 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {!loggedInUser ? (
+        {!loggedInUser ? (
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.loginContainer}>
-              <Image
-                source={require("./assets/logo.jpg")}
-                style={styles.logo}
-              />
+              <Image source={require("./assets/logo.jpg")} style={styles.logo} />
               <Text style={styles.title}>Login</Text>
 
               <TextInput
@@ -153,6 +148,7 @@ const LoginScreen = ({ navigation }) => {
                 value={form.email}
                 onChangeText={(text) => setForm({ ...form, email: text })}
               />
+
               <TextInput
                 style={styles.input}
                 placeholder="Password"
@@ -170,60 +166,53 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.link}>Don’t have an account? Register</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <View style={{ flex: 1 }}>
-              <View style={styles.profileSection}>
-                <TouchableOpacity onPress={pickImage}>
-                  {profileImage ? (
-                    <Image
-                      source={{ uri: profileImage }}
-                      style={styles.profileImage}
-                    />
-                  ) : (
-                    <Ionicons name="person-circle-outline" size={100} color="#aaa" />
-                  )}
-                </TouchableOpacity>
-                <Text style={styles.userNameBig}>{loggedInUser.name}</Text>
-                <Text style={styles.userEmail}>{loggedInUser.email}</Text>
-                <Text style={styles.changePhotoText}>Tap image to change photo</Text>
-              </View>
-
-              <Text style={styles.subtitle}>Select a user to message:</Text>
-
-              <FlatList
-                data={otherUsers}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderUser}
-                style={{ flex: 1, marginTop: 10 }}
-              />
-
-              {/* ABOUT BUTTON */}
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#6f42c1" }]}
-                onPress={() =>
-                  navigation.navigate("About", {
-                    userId: loggedInUser.id,
-                    image: profileImage,
-                  })
-                }
-              >
-                <Text style={styles.actionButtonText}>About</Text>
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1, padding: 20 }}>
+            <View style={styles.profileSection}>
+              <TouchableOpacity onPress={pickImage}>
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                ) : (
+                  <Ionicons name="person-circle-outline" size={100} color="#aaa" />
+                )}
               </TouchableOpacity>
 
-              {/* LOGOUT BUTTON */}
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#dc3545" }]}
-                onPress={() => {
-                  setLoggedInUser(null);
-                  setOtherUsers([]);
-                  setProfileImage(null);
-                }}
-              >
-                <Text style={styles.actionButtonText}>Logout</Text>
-              </TouchableOpacity>
+              <Text style={styles.userNameBig}>{loggedInUser.name}</Text>
+              <Text style={styles.userEmail}>{loggedInUser.email}</Text>
+              <Text style={styles.changePhotoText}>Tap image to change photo</Text>
             </View>
-          )}
-        </ScrollView>
+
+            <Text style={styles.subtitle}>Select a user to message:</Text>
+
+            <FlatList
+              data={otherUsers}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderUser}
+              style={{ flex: 1, marginTop: 10 }}
+            />
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#6f42c1" }]}
+              onPress={() =>
+                navigation.navigate("About", { userId: loggedInUser.id, image: profileImage })
+              }
+            >
+              <Text style={styles.actionButtonText}>About</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#dc3545" }]}
+              onPress={() => {
+                setLoggedInUser(null);
+                setOtherUsers([]);
+                setProfileImage(null);
+              }}
+            >
+              <Text style={styles.actionButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -231,7 +220,7 @@ const LoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#121212" },
-  loginContainer: { flex: 1, justifyContent: "center" },
+  loginContainer: { flex: 1 },
   logo: { width: 120, height: 120, alignSelf: "center", marginBottom: 15, borderRadius: 60 },
   title: {
     fontSize: 32,
@@ -280,13 +269,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: "#8a2be2",
-  },
+  profileImage: { width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: "#8a2be2" },
   userNameBig: { fontSize: 22, fontWeight: "800", marginTop: 10, color: "#e0e0e0" },
   changePhotoText: { fontSize: 13, marginTop: 5, color: "#aaa" },
   subtitle: {
@@ -308,12 +291,7 @@ const styles = StyleSheet.create({
   },
   userName: { fontSize: 17, fontWeight: "700", color: "#e0e0e0" },
   userEmail: { fontSize: 14, color: "#bbb" },
-  actionButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    marginVertical: 8,
-  },
+  actionButton: { paddingVertical: 14, borderRadius: 12, alignItems: "center", marginVertical: 8 },
   actionButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
 });
 
