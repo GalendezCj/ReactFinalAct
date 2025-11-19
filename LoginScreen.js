@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useSQLiteContext } from "expo-sqlite";
@@ -24,7 +25,8 @@ const LoginScreen = ({ navigation }) => {
   const [otherUsers, setOtherUsers] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
 
-  // Ensure profileUri column exists
+  const [showInfo, setShowInfo] = useState(false);
+
   useEffect(() => {
     const createProfileUriColumn = async () => {
       try {
@@ -127,14 +129,21 @@ const LoginScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
       >
         {!loggedInUser ? (
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+            contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
           >
+            {/* Info Button */}
+            <View style={styles.infoButtonContainer}>
+              <TouchableOpacity onPress={() => setShowInfo(true)}>
+                <Ionicons name="information-circle-outline" size={30} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.loginContainer}>
               <Image source={require("./assets/logo.jpg")} style={styles.logo} />
               <Text style={styles.title}>Login</Text>
@@ -142,7 +151,7 @@ const LoginScreen = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#fff"
+                placeholderTextColor="#ccc"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={form.email}
@@ -152,7 +161,7 @@ const LoginScreen = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Password"
-                placeholderTextColor="#fff"
+                placeholderTextColor="#ccc"
                 secureTextEntry
                 value={form.password}
                 onChangeText={(text) => setForm({ ...form, password: text })}
@@ -168,7 +177,7 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </ScrollView>
         ) : (
-          <View style={{ flex: 1, padding: 20 }}>
+          <View style={styles.loggedInContainer}>
             <View style={styles.profileSection}>
               <TouchableOpacity onPress={pickImage}>
                 {profileImage ? (
@@ -190,6 +199,7 @@ const LoginScreen = ({ navigation }) => {
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderUser}
               style={{ flex: 1, marginTop: 10 }}
+              keyboardShouldPersistTaps="handled"
             />
 
             <TouchableOpacity
@@ -213,6 +223,31 @@ const LoginScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Info Modal */}
+        <Modal visible={showInfo} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Information</Text>
+              <Image
+                source={require("./assets/teody.jpg")}
+                style={styles.modalImage}
+              />
+              <Text style={styles.modalText}>
+                Author/Submitted by: Teody L. Palatan{"\n"}
+                Submitted To: Jay Ian Camelotes{"\n"}
+                Bio: "Passionate about creating practical and innovative solutions, I enjoy turning ideas into impactful projects."{"\n"}
+                Address: Camambugan, Ubay, Bohol
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowInfo(false)}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -220,6 +255,8 @@ const LoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#121212" },
+  scrollContainer: { flexGrow: 1, padding: 20, justifyContent: "flex-start" },
+  infoButtonContainer: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 15 },
   loginContainer: { flex: 1 },
   logo: { width: 120, height: 120, alignSelf: "center", marginBottom: 15, borderRadius: 60 },
   title: {
@@ -254,45 +291,25 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   loginButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  link: {
-    color: "#b57fff",
-    textAlign: "center",
-    marginTop: 18,
-    fontWeight: "600",
-    fontSize: 16,
-    textShadowColor: "rgba(139, 69, 255, 0.5)",
-    textShadowRadius: 8,
-  },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 25,
-    marginTop: 20,
-    paddingVertical: 10,
-  },
+  link: { color: "#b57fff", textAlign: "center", marginTop: 18, fontWeight: "600", fontSize: 16, textShadowColor: "rgba(139, 69, 255, 0.5)", textShadowRadius: 8 },
+  loggedInContainer: { flex: 1, padding: 20 },
+  profileSection: { alignItems: "center", marginBottom: 25, marginTop: 20, paddingVertical: 10 },
   profileImage: { width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: "#8a2be2" },
   userNameBig: { fontSize: 22, fontWeight: "800", marginTop: 10, color: "#e0e0e0" },
   changePhotoText: { fontSize: 13, marginTop: 5, color: "#aaa" },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 10,
-    textAlign: "center",
-    color: "#e0e0e0",
-    textShadowColor: "rgba(138, 43, 226, 0.5)",
-    textShadowRadius: 10,
-  },
-  userRow: {
-    padding: 15,
-    backgroundColor: "#1e1e1e",
-    borderRadius: 14,
-    marginBottom: 12,
-    borderLeftWidth: 5,
-    borderLeftColor: "#8a2be2",
-  },
+  subtitle: { fontSize: 20, fontWeight: "700", marginBottom: 10, textAlign: "center", color: "#e0e0e0", textShadowColor: "rgba(138, 43, 226, 0.5)", textShadowRadius: 10 },
+  userRow: { padding: 15, backgroundColor: "#1e1e1e", borderRadius: 14, marginBottom: 12, borderLeftWidth: 5, borderLeftColor: "#8a2be2" },
   userName: { fontSize: 17, fontWeight: "700", color: "#e0e0e0" },
   userEmail: { fontSize: 14, color: "#bbb" },
   actionButton: { paddingVertical: 14, borderRadius: 12, alignItems: "center", marginVertical: 8 },
   actionButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center" },
+  modalContent: { backgroundColor: "#1e1e1e", padding: 20, borderRadius: 12, width: "85%", alignItems: "center" },
+  modalTitle: { fontSize: 22, fontWeight: "800", color: "#fff", marginBottom: 10 },
+  modalImage: { width: 120, height: 120, borderRadius: 60, marginBottom: 15 },
+  modalText: { color: "#fff", fontSize: 16, textAlign: "center", marginBottom: 20 },
+  modalCloseButton: { backgroundColor: "#8a2be2", paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12 },
+  modalCloseText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });
 
 export default LoginScreen;

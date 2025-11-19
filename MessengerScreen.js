@@ -10,6 +10,7 @@ import {
   StatusBar,
   Image,
   Platform,
+  Keyboard,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -100,6 +101,19 @@ const MessengerScreen = ({ route, navigation }) => {
       loadMessages();
       loadUserPics();
     });
+
+    // Keyboard listeners to scroll FlatList when keyboard opens/closes
+    const showListener = Keyboard.addListener("keyboardDidShow", () => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    });
+    const hideListener = Keyboard.addListener("keyboardDidHide", () => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    });
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
   }, []);
 
   const renderItem = ({ item }) => {
@@ -145,14 +159,15 @@ const MessengerScreen = ({ route, navigation }) => {
       {/* Messages + Input */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="height" // important for Android
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 70} // offset for header + status bar
       >
         <FlatList
           ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingVertical: 10 }}
+          contentContainerStyle={{ paddingVertical: 10, paddingHorizontal: 8 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         />
@@ -176,10 +191,7 @@ const MessengerScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
+  safeArea: { flex: 1, backgroundColor: "#000" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -196,94 +208,20 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   backButton: { padding: 4 },
-  backText: {
-    color: "#d180ff",
-    fontSize: 16,
-    fontWeight: "bold",
-    textShadowColor: "rgba(209, 128, 255, 0.6)",
-    textShadowRadius: 12,
-  },
-  headerName: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "800",
-    textShadowColor: "rgba(187, 0, 255, 0.6)",
-    textShadowRadius: 12,
-    flex: 1,
-    textAlign: "center",
-  },
-  messageRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginVertical: 6,
-    paddingHorizontal: 10,
-  },
+  backText: { color: "#d180ff", fontSize: 16, fontWeight: "bold", textShadowColor: "rgba(209, 128, 255, 0.6)", textShadowRadius: 12 },
+  headerName: { color: "#fff", fontSize: 20, fontWeight: "800", textShadowColor: "rgba(187, 0, 255, 0.6)", textShadowRadius: 12, flex: 1, textAlign: "center" },
+  messageRow: { flexDirection: "row", alignItems: "flex-end", marginVertical: 6 },
   rowLeft: { justifyContent: "flex-start" },
   rowRight: { justifyContent: "flex-end" },
-  chatHeadImage: {
-    width: 38,
-    height: 38,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    borderWidth: 2,
-    borderColor: "#d180ff",
-  },
-  messageBubble: {
-    padding: 12,
-    borderRadius: 18,
-    maxWidth: "70%",
-  },
-  myMessage: {
-    backgroundColor: "#5d0099",
-    shadowColor: "rgba(187, 0, 255, 0.8)",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 14,
-    elevation: 6,
-    marginLeft: 6,
-    borderWidth: 1,
-    borderColor: "#bb00ff",
-  },
+  chatHeadImage: { width: 38, height: 38, borderRadius: 20, marginHorizontal: 4, borderWidth: 2, borderColor: "#d180ff" },
+  messageBubble: { padding: 12, borderRadius: 18, maxWidth: "70%" },
+  myMessage: { backgroundColor: "#5d0099", shadowColor: "rgba(187, 0, 255, 0.8)", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 14, elevation: 6, marginLeft: 6, borderWidth: 1, borderColor: "#bb00ff" },
   myMessageText: { color: "#fff", fontSize: 16 },
-  otherMessage: {
-    backgroundColor: "#1a1a1a",
-    borderWidth: 1,
-    borderColor: "#4d4d4d",
-    marginRight: 6,
-  },
+  otherMessage: { backgroundColor: "#1a1a1a", borderWidth: 1, borderColor: "#4d4d4d", marginRight: 6 },
   otherMessageText: { color: "#fff", fontSize: 16 },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#4d0066",
-    backgroundColor: "#0d0d0d",
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#1e1e1e",
-    color: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginRight: 8,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#8a2be2",
-    maxHeight: 100,
-  },
-  sendButton: {
-    backgroundColor: "#bb00ff",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 25,
-    shadowColor: "rgba(187, 0, 255, 0.9)",
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 14,
-    shadowOpacity: 1,
-    elevation: 6,
-  },
+  inputRow: { flexDirection: "row", alignItems: "center", padding: 8, borderTopWidth: 1, borderTopColor: "#4d0066", backgroundColor: "#0d0d0d" },
+  input: { flex: 1, backgroundColor: "#1e1e1e", color: "#fff", borderRadius: 25, paddingHorizontal: 15, paddingVertical: 10, marginRight: 8, fontSize: 16, borderWidth: 1, borderColor: "#8a2be2", maxHeight: 100 },
+  sendButton: { backgroundColor: "#bb00ff", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 25, shadowColor: "rgba(187, 0, 255, 0.9)", shadowOffset: { width: 0, height: 0 }, shadowRadius: 14, shadowOpacity: 1, elevation: 6 },
   sendText: { color: "#fff", fontWeight: "bold" },
 });
 
